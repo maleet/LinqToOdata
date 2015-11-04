@@ -44,7 +44,7 @@
                     if (!uri) {
                         throw new Error("Provider doesn't support querying that Type.");
                     } else {
-                        var odataString = BoostJS.odata.toString(queryable);
+                        var odataString = BoostJS.OData.toString(queryable);
 
                         var url = uri + "?" + odataString;
 
@@ -101,7 +101,7 @@
             return this.or(this.and(p.firstName.equals("Jared"), p.lastName.equals("Barnes")), p.age.greaterThan(30));
         }).take(1).skip(5).orderByDesc(function (p) {
             return p.age;
-        }).toArray().then(function (a) {
+        }).toArray().success(function (a) {
             console.log(a);
         });
 
