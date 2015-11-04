@@ -1,9 +1,27 @@
 {
-  "name": "LinqToOdata",
-  "version": "0.0.0",
-  "dependencies": {
-    "bootstrap": "~3.2",
-    "jasmine-core": "jasmine#~2.3.4",
-    "underscore": "~1.8.3"
-  }
+    "name": "LinqToOdata",
+    "version": "0.0.1",
+    "main": [
+        "dist/LinqToOdata.js",
+        "dist/LinqToOdata.min.js"
+    ],
+    "ignore": [
+        "bower_components",
+        "less",
+        "node_modules",
+        "www",
+        ".bowerrc",
+        ".gitignore",
+        ".jshintignore",
+        ".jshintrc",
+        "bower.json",
+        "gruntfile.js",
+        "package.json",
+        "README.md"
+    ],
+    "dependencies": {
+        "bootstrap": "~3.2",
+        "jasmine-core": "jasmine#~2.3.4",
+        "underscore": "~1.8.3"
+    }
 }

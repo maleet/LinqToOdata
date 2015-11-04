@@ -1,6 +1,6 @@
 describe("Metadata", function () {
     it("Create object graph by metadata.", function () {
-        var bpBuyFrom = create(metadata, metadata.BpBuyFrom);
+        var bpBuyFrom = BoostJS.Metadata.create(metadata, metadata.BpBuyFrom);
 
         expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
     });
@@ -9,7 +9,7 @@ describe("Metadata", function () {
 describe("Metadata", function () {
     it("Create all object graphs by metadata.", function () {
         Object.keys(metadata).forEach(function (key) {
-            var bpBuyFrom = create(metadata, metadata[key]);
+            var bpBuyFrom = BoostJS.Metadata.create(metadata, metadata[key]);
             expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
         })
     });

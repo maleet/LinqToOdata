@@ -70,9 +70,31 @@ module.exports = function (grunt) {
                     'www/css/main.css': 'less/main.less'
                 }
             }
+        },
+        uglify: {
+            options: {
+                mangle: false
+            },
+            odataToLinqMin: {
+                files: {
+                    'dist/LinqToOdata.min.js': ['www/js/LinqToOdata.js']
+                }
+            },
+            odataToLinq: {
+                options: {
+                    beautify: {
+                        width: 80,
+                        beautify: true
+                    }
+                },
+                files: {
+                    'dist/LinqToOdata.js': ['www/js/LinqToOdata.js']
+                }
+            }
+
         }
     });
 
-    grunt.registerTask('serve', ['bowercopy', 'connect:main', 'watch']);
+    grunt.registerTask('serve', ['bowercopy', 'uglify', 'connect:main', 'watch']);
 
 };
