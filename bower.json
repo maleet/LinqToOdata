@@ -1,6 +1,6 @@
 {
     "name": "LinqToOdata",
-    "version": "0.0.1",
+    "version": "v1.0",
     "main": [
         "dist/LinqToOdata.js",
         "dist/LinqToOdata.min.js"
