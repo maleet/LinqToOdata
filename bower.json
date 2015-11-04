@@ -1,0 +1,9 @@
+{
+  "name": "LinqToOdata",
+  "version": "0.0.0",
+  "dependencies": {
+    "bootstrap": "~3.2",
+    "jasmine-core": "jasmine#~2.3.4",
+    "underscore": "~1.8.3"
+  }
+}
