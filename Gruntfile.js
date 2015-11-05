@@ -16,17 +16,17 @@ module.exports = function (grunt) {
             // Anything can be copied
             test: {
                 options: {
-                    destPrefix: 'www'
+                    destPrefix: 'src'
                 },
                 files: {
                     // Keys are destinations (prefixed with `options.destPrefix`)
                     // Values are sources (prefixed with `options.srcPrefix`); One source per destination
                     // e.g. 'bower_components/chai/lib/chai.js' will be copied to 'test/js/libs/chai.js'
-                    'js/jasmine.js': 'jasmine-core/lib/jasmine-core/jasmine.js',
-                    'js/boot.js': 'jasmine-core/lib/jasmine-core/boot.js',
-                    'js/jasmine-html.js': 'jasmine-core/lib/jasmine-core/jasmine-html.js',
-                    'js/underscore.js': 'underscore/underscore.js',
-                    'css/jasmine.css': 'jasmine-core/lib/jasmine-core/jasmine.css'
+                    'www/js/jasmine.js': 'jasmine-core/lib/jasmine-core/jasmine.js',
+                    'www/js/boot.js': 'jasmine-core/lib/jasmine-core/boot.js',
+                    'www/js/jasmine-html.js': 'jasmine-core/lib/jasmine-core/jasmine-html.js',
+                    'www/js/underscore.js': 'underscore/underscore.js',
+                    'www/css/jasmine.css': 'jasmine-core/lib/jasmine-core/jasmine.css'
                 }
             }
         },
@@ -37,7 +37,7 @@ module.exports = function (grunt) {
         connect: {
             main: {
                 options: {
-                    base: 'www',
+                    base: 'src/www',
                     hostname: '*',
                     port: 9999,
                     livereload: true
@@ -55,7 +55,7 @@ module.exports = function (grunt) {
                     livereloadOnError: false,
                     spawn: false
                 },
-                files: ['www/js/*.js', 'www/*.html', 'www/**/*.html', 'www/img/*', 'less/**/*.less', 'less/*.less'],
+                files: ['src/www/js/*.js', 'src/www/*.html', 'src/www/**/*.html', 'src/www/img/*', 'src/less/**/*.less', 'src/less/*.less'],
                 tasks: ['less'] //all the tasks are run dynamically during the watch event handler
             }
         },
@@ -67,7 +67,7 @@ module.exports = function (grunt) {
             production: {
                 options: {},
                 files: {
-                    'www/css/main.css': 'less/main.less'
+                    'www/css/main.css': 'src/less/main.less'
                 }
             }
         },
@@ -77,7 +77,7 @@ module.exports = function (grunt) {
             },
             odataToLinqMin: {
                 files: {
-                    'dist/LinqToOdata.min.js': ['www/js/LinqToOdata.js']
+                    'dist/LinqToOdata.min.js': ['src/www/js/LinqToOdata.js']
                 }
             },
             odataToLinq: {
@@ -88,7 +88,7 @@ module.exports = function (grunt) {
                     }
                 },
                 files: {
-                    'dist/LinqToOdata.js': ['www/js/LinqToOdata.js']
+                    'dist/LinqToOdata.js': ['src/www/js/LinqToOdata.js']
                 }
             }
 

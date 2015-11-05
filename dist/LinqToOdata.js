@@ -59,6 +59,24 @@
                 };
                 observers.observe("then", listener);
             },
+            success: function(callback) {
+                var listener = function(e) {
+                    callback(e.value);
+                };
+                observers.observe("then", listener);
+            },
+            "catch": function(callback) {
+                var listener = function(e) {
+                    callback(e.error);
+                };
+                observers.observe("ifError", listener);
+            },
+            error: function(callback) {
+                var listener = function(e) {
+                    callback(e.error);
+                };
+                observers.observe("ifError", listener);
+            },
             ifError: function(callback) {
                 var listener = function(e) {
                     callback(e.error);
@@ -115,7 +133,13 @@
         }, _state = defaultState;
         self.value = null, self.error = null, self.isComplete = !1, self.then = function(callback) {
             return _state.get(), _state.then(callback), self;
+        }, self.success = function(callback) {
+            return _state.get(), _state.then(callback), self;
         }, self.ifError = function(callback) {
+            return _state.get(), _state.ifError(callback), self;
+        }, self.error = function(callback) {
+            return _state.get(), _state.ifError(callback), self;
+        }, self["catch"] = function(callback) {
             return _state.get(), _state.ifError(callback), self;
         }, self.ifCanceled = function(callback) {
             return _state.get(), _state.ifCanceled(callback), self;
@@ -743,16 +767,7 @@
             var visitor = new ODataQueryVisitor(), parser = new ExpressionParser(visitor), where = parser.parse(queryable.expression.where) || "", orderBy = parser.parse(queryable.expression.orderBy) || "", skip = parser.parse(queryable.expression.skip) || "", take = parser.parse(queryable.expression.take) || "", count = parser.parse(queryable.expression.count) || "", expand = parser.parse(queryable.expression.expand) || "", select = parser.parse(queryable.expression.select) || "";
             return where + "" + orderBy + skip + take + count + expand + select;
         }
-    };
-    Object.defineProperty(Array.prototype, "asQueryable", {
-        enumerable: !1,
-        configurable: !1,
-        value: function(Type) {
-            var queryable = new Queryable(Type);
-            return queryable;
-        }
-    });
-    var metadata = function() {
+    }, metadata = function() {
         function create(metadata, item) {
             var key = getKeyByValue(metadata, item), nodeTree = [], node = {
                 key: key,
@@ -847,9 +862,101 @@
         return {
             create: create
         };
+    }, QueryProvider = function() {
+        var self = this;
+        self.count = function(queryable) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    setValue(array.length);
+                });
+            });
+        }, self.any = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
+                    setValue(results.length > 0 ? !0 : !1);
+                });
+            });
+        }, self.all = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
+                    setValue(results.length === array.length);
+                });
+            });
+        }, self.firstOrDefault = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
+                    setValue(results[0] || null);
+                });
+            });
+        }, self.lastOrDefault = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
+                    setValue(results[results.length - 1] || null);
+                });
+            });
+        }, self.first = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array;
+                    var result = results[0];
+                    result ? setValue(result) : setError(new Error("Couldn't find a match."));
+                });
+            });
+        }, self.last = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array;
+                    var result = results[results.length - 1];
+                    result ? setValue(result) : setError(new Error("Couldn't find a match."));
+                });
+            });
+        }, self.contains = function(queryable, func) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
+                    setValue(results > 0);
+                });
+            });
+        }, self.select = function(queryable, forEachFunc) {
+            return new Future(function(setValue, setError) {
+                self.toArray(queryable).then(function(array) {
+                    var objects = [];
+                    array.forEach(function(item) {
+                        objects.push(forEachFunc(item));
+                    }), setValue(objects);
+                });
+            });
+        }, self.intersects = function(queryable, compareToQueryable) {
+            return new Future(function(setValue, setError) {
+                var task = new BASE.async.Task();
+                task.add(self.toArray(queryable)), task.add(compareToQueryable.toArray()), task.start().whenAll(function(futures) {
+                    var intersects = [], array1 = futures[0].value, array2 = futures[1].value;
+                    array1.forEach(function(item) {
+                        array2.indexOf(item) > -1 && intersects.push(item);
+                    }), setValue(intersects);
+                });
+            });
+        }, self.toArray = function(queryable) {
+            return new BASE.async.Future(function(setValue, setError) {
+                setTimeout(function() {
+                    setValue([]);
+                }, 0);
+            });
+        }, self.execute = self.toArray;
     };
     window.BoostJS = {}, BoostJS.Observable = Observable, BoostJS.Future = Future, BoostJS.Expression = Expression, 
     BoostJS.ExpressionBuilder = ExpressionBuilder, BoostJS.Queryable = Queryable, BoostJS.ExpressionParser = ExpressionParser, 
     BoostJS.ODataQueryVisitor = ODataQueryVisitor, BoostJS.OData = OData, BoostJS.Metadata = metadata(), 
-    BoostJS.extend = extend;
+    BoostJS.QueryProvider = QueryProvider, BoostJS.extend = extend;
 }();
