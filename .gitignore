@@ -1,4 +1,8 @@
+node_modules
 bower_components/
 node_modules/
 
 .idea/
+bower_components/bootstrap/dist/css/bootstrap.css
+.idea/LinqToOdata.iml
+bower_components/bootstrap/dist/css/bootstrap.css
