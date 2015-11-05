@@ -392,10 +392,10 @@
             }
         }
     });
-    var Queryable = function(Type, expression, structure) {
+    var Queryable = function(Type, expression, Schema) {
         var self = this;
         expression = expression || {}, assertInstance(Queryable, self);
-        var _Type = Type || Object, _provider = null;
+        var _Type = Type || Object, _provider = (Schema || Object, null);
         Object.defineProperties(self, {
             Type: {
                 enumerable: !1,
@@ -433,14 +433,14 @@
         var _whereExpression = expression.where || null;
         self.where = function(fn) {
             fn = fn || function() {};
-            var expression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure));
+            var expression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema));
             if (!(expression instanceof Expression)) return self;
             if (null !== _whereExpression) throw new Error('Cannot call "where" twice.');
             return _whereExpression = Expression.where(expression), self;
         }, self.or = function(fn) {
             var rightExpression;
             fn instanceof Expression ? rightExpression = Expression.or.apply(Expression, arguments) : (fn = fn || function() {}, 
-            rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure)));
+            rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema)));
             var whereExpression, copy = createCopy(expression);
             if (_whereExpression) {
                 var expressions = _whereExpression.copy();
@@ -449,7 +449,7 @@
             return copy.expression.where = whereExpression, self;
         }, self.and = function(fn) {
             fn instanceof Expression ? rightExpression = Expression.and.apply(Expression, arguments) : (fn = fn || function() {}, 
-            rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure)));
+            rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema)));
             var whereExpression, copy = createCopy(expression);
             if (_whereExpression) {
                 var expressions = _whereExpression.copy();
@@ -527,7 +527,7 @@
             _orderByExpression.forEach(function(expression) {
                 orderBy.children.push(expression.copy());
             });
-            var result = fn.call(self, new ExpressionBuilder(Type, void 0, structure));
+            var result = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
             result && orderBy.children.push(Expression.ascending(Expression.property(result.toString()))), 
             expression.orderBy = orderBy;
             var copy = createCopy(expression);
@@ -547,7 +547,7 @@
             _expandExpression.forEach(function(expression) {
                 expand.children.push(expression.copy());
             });
-            var property = fn.call(self, new ExpressionBuilder(Type, void 0, structure));
+            var property = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
             if (property) {
                 var property2 = Expression.property(property.toString());
                 expand.children.push(property2);
@@ -600,7 +600,7 @@
             _selectExpression.forEach(function(expression) {
                 select.children.push(expression.copy());
             });
-            var property = fn.call(self, new ExpressionBuilder(Type, void 0, structure));
+            var property = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
             if (property) {
                 var property2 = Expression.property(property.toString());
                 select.children.push(property2);
@@ -619,7 +619,7 @@
             return queryable.provider = _provider, queryable;
         };
         var createCopy = function(expression) {
-            var queryable = new Queryable(Type, expression);
+            var queryable = new Queryable(Type, expression, Schema);
             return queryable.provider = self.provider, queryable;
         };
         return self.copy = function() {
