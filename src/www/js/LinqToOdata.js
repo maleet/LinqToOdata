@@ -685,8 +685,8 @@
                                     var arrayTypeString = ChildType.Type.replace('[]', '');
                                     ChildType = structure[arrayTypeString];
                                 }
-                                else if (ChildType.Type == property) {
-                                    ChildType = structure[property];
+                                else if (structure[ChildType.Type] !== undefined) {
+                                    ChildType = structure[ChildType.Type];
                                 }
                             }
                         }
