@@ -56,7 +56,7 @@ module.exports = function (grunt) {
                     spawn: false
                 },
                 files: ['src/www/js/*.js', 'src/www/*.html', 'src/www/**/*.html', 'src/www/img/*', 'src/less/**/*.less', 'src/less/*.less'],
-                tasks: ['less'] //all the tasks are run dynamically during the watch event handler
+                tasks: ['uglify', 'less'] //all the tasks are run dynamically during the watch event handler
             }
         },
 
@@ -67,7 +67,7 @@ module.exports = function (grunt) {
             production: {
                 options: {},
                 files: {
-                    'www/css/main.css': 'src/less/main.less'
+                    'src/www/css/main.css': 'src/less/main.less'
                 }
             }
         },
