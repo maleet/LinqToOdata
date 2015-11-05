@@ -723,13 +723,14 @@
         }
     });
 
-    var Queryable = function (Type, expression, structure) {
+    var Queryable = function (Type, expression, Schema) {
         var self = this;
         expression = expression || {};
 
         assertInstance(Queryable, self);
 
         var _Type = Type || Object;
+        var _Schema = Schema || Object;
         var _provider = null;
 
         Object.defineProperties(self, {
@@ -776,7 +777,7 @@
         self.where = function (fn) {
             fn = fn || function () {
                 };
-            var expression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, structure));
+            var expression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, Schema));
 
             if (!(expression instanceof Expression)) {
                 return self;
@@ -798,7 +799,7 @@
             } else {
                 fn = fn || function () {
                     };
-                rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, structure));
+                rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, Schema));
             }
 
             var copy = createCopy(expression);
@@ -824,7 +825,7 @@
             } else {
                 fn = fn || function () {
                     };
-                rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, structure));
+                rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, Schema));
             }
 
             var copy = createCopy(expression);
@@ -982,7 +983,7 @@
             _orderByExpression.forEach(function (expression) {
                 orderBy.children.push(expression.copy());
             });
-            var result = fn.call(self, new ExpressionBuilder(Type, undefined, structure));
+            var result = fn.call(self, new ExpressionBuilder(Type, undefined, Schema));
             if (result) {
                 orderBy.children.push(Expression.ascending(Expression.property(result.toString())));
             }
@@ -1013,7 +1014,7 @@
             _expandExpression.forEach(function (expression) {
                 expand.children.push(expression.copy());
             });
-            var property = fn.call(self, new ExpressionBuilder(Type, undefined, structure));
+            var property = fn.call(self, new ExpressionBuilder(Type, undefined, Schema));
             if (property) {
                 var property2 = Expression.property(property.toString());
                 expand.children.push(property2);
@@ -1107,7 +1108,7 @@
             _selectExpression.forEach(function (expression) {
                 select.children.push(expression.copy());
             });
-            var property = fn.call(self, new ExpressionBuilder(Type, undefined, structure));
+            var property = fn.call(self, new ExpressionBuilder(Type, undefined, Schema));
             if (property) {
                 var property2 = Expression.property(property.toString());
                 select.children.push(property2);
@@ -1142,7 +1143,7 @@
         };
 
         var createCopy = function (expression) {
-            var queryable = new Queryable(Type, expression);
+            var queryable = new Queryable(Type, expression, Schema);
             queryable.provider = self.provider;
             return queryable;
         };
