@@ -605,11 +605,21 @@
             return Expression.equal(property, constant);
         };
 
-        self.any = function (value) {
+        self.any = function (fn) {
             var property = Expression.property(namespace);
-            var constant = Expression.getExpressionType(value);
-            var type = new ExpressionBuilder(Type);
-            return Expression.any(property, constant, type);
+            var type = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, structure));
+
+            changePrefix(type);
+
+            function changePrefix(type) {
+                type.children && type.children.forEach(function (child) {
+                    if (child.name == 'property')
+                        child.value = 'u/' + child.value;
+                    changePrefix(child);
+                });
+            }
+
+            return Expression.any(property, type);
         };
 
         self.notEqualTo = function (value) {
@@ -906,7 +916,7 @@
                 orderBy.children.push(expression.copy());
             });
 
-            var result = fn.call(self, new ExpressionBuilder(Type));
+            var result = fn.call(self, new ExpressionBuilder(Type, undefined, Schema));
             if (result) {
                 orderBy.children.push(Expression.descending(Expression.property(result.toString())));
             }
@@ -1256,29 +1266,14 @@
 
         ODataQueryVisitor.prototype['any'] = function () {
             var self = this;
-            var property = arguments[0].replace('.0', '');
-            var propertyValue = arguments[1].children;
-            var methodname = arguments[1].name || 'equal';
-            var values = propertyValue[1].value;
-            var anyString = '{0}/any(u: u/{1}'.format(property, propertyValue[0].value);
-
-            var args = [];
-            if (!Array.isArray(values)) {
-                values = [values];
-            }
-            values.forEach(function (value, index) {
-                args.push(self["equal"].apply(self, [anyString, value]) + ')');
-            });
-
-            var value;
-            if (args.length === 1) {
-                value = args[0];
-
-            } else {
-                value = self['or'].apply(self, args);
+            var property = arguments[0].replace(/\.0/g, '');
+            property = replaceDotWithSlash(property);
+            if (arguments[1] === true) {
+                return '{0}/any()'.format(property);
             }
 
-            return value;
+            var anyString = '{0}/any(U: {1})'.format(property, arguments[1]);
+            return anyString;
         };
 
         ODataQueryVisitor.prototype["and"] = function () {
