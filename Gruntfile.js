@@ -22,6 +22,7 @@ module.exports = function (grunt) {
                     // Keys are destinations (prefixed with `options.destPrefix`)
                     // Values are sources (prefixed with `options.srcPrefix`); One source per destination
                     // e.g. 'bower_components/chai/lib/chai.js' will be copied to 'test/js/libs/chai.js'
+                    'www/js/angular.js': 'angular/angular.js',
                     'www/js/jasmine.js': 'jasmine-core/lib/jasmine-core/jasmine.js',
                     'www/js/boot.js': 'jasmine-core/lib/jasmine-core/boot.js',
                     'www/js/jasmine-html.js': 'jasmine-core/lib/jasmine-core/jasmine-html.js',

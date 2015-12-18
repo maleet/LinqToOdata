@@ -1,4 +1,4 @@
-!function() {
+!function(BoostJS, angular) {
     function replaceDotWithSlash(str) {
         return str.replace(/\./g, "/");
     }
@@ -326,9 +326,14 @@
         self.equals = function(value) {
             var property = Expression.property(namespace), constant = Expression.getExpressionType(value);
             return Expression.equal(property, constant);
-        }, self.any = function(value) {
-            var property = Expression.property(namespace), constant = Expression.getExpressionType(value), type = new ExpressionBuilder(Type);
-            return Expression.any(property, constant, type);
+        }, self.any = function(fn) {
+            function changePrefix(type) {
+                type.children && type.children.forEach(function(child) {
+                    "property" == child.name && (child.value = "u/" + child.value), changePrefix(child);
+                });
+            }
+            var property = Expression.property(namespace), type = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure));
+            return changePrefix(type), Expression.any(property, type);
         }, self.notEqualTo = function(value) {
             var property = Expression.property(namespace), constant = Expression.getExpressionType(value);
             return Expression.notEqual(property, constant);
@@ -365,7 +370,7 @@
                     -1 !== ChildType.Type.indexOf("[]")) {
                         var arrayTypeString = ChildType.Type.replace("[]", "");
                         ChildType = structure[arrayTypeString];
-                    } else ChildType.Type == property && (ChildType = structure[property]);
+                    } else void 0 !== structure[ChildType.Type] && (ChildType = structure[ChildType.Type]);
                     var expressionBuilder = new ExpressionBuilder(ChildType, (namespace ? namespace + "." : "") + property, structure);
                     return expressionBuilder;
                 },
@@ -491,7 +496,7 @@
             _orderByExpression.forEach(function(expression) {
                 orderBy.children.push(expression.copy());
             });
-            var result = fn.call(self, new ExpressionBuilder(Type));
+            var result = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
             result && orderBy.children.push(Expression.descending(Expression.property(result.toString()))), 
             expression.orderBy = orderBy;
             var copy = createCopy(expression);
@@ -776,6 +781,14 @@
             };
             return nodeTree.push(node), parseMetadataToObject(metadata, key, nodeTree, node);
         }
+        function createSchema() {
+            var result = {}, metadata = arguments[0];
+            for (i = 1; i < arguments.length; i++) {
+                var item = arguments[i];
+                result[getKeyByValue(metadata, item)] = item;
+            }
+            return result;
+        }
         function parseMetadataToObject(metadata, key, nodeTree, parent) {
             if (hasSameParent(parent, key)) return "{circular: " + key + "}";
             var node = {
@@ -785,7 +798,7 @@
             };
             parent.siblings.push(node);
             var item = metadata[key];
-            if (void 0 == item) throw new Error("Object not found in Metadata: " + key);
+            void 0 == item && console.log("Object not found in Metadata: " + key);
             var type = _.extend({}, item);
             return Object.keys(type).forEach(function(field) {
                 "Id" == field ? type[field] = "00000000-0000-0000-0000-000000000000" : type[field] = getValueBasedOnType(metadata, type, field, nodeTree, node);
@@ -860,7 +873,8 @@
             return void 0;
         }
         return {
-            create: create
+            create: create,
+            createFilteredSchema: createSchema
         };
     }, QueryProvider = function() {
         var self = this;
@@ -955,8 +969,55 @@
             });
         }, self.execute = self.toArray;
     };
-    window.BoostJS = {}, BoostJS.Observable = Observable, BoostJS.Future = Future, BoostJS.Expression = Expression, 
+    BoostJS.Observable = Observable, BoostJS.Future = Future, BoostJS.Expression = Expression, 
     BoostJS.ExpressionBuilder = ExpressionBuilder, BoostJS.Queryable = Queryable, BoostJS.ExpressionParser = ExpressionParser, 
     BoostJS.ODataQueryVisitor = ODataQueryVisitor, BoostJS.OData = OData, BoostJS.Metadata = metadata(), 
     BoostJS.QueryProvider = QueryProvider, BoostJS.extend = extend;
-}();
+    var config = {
+        endpoint: "/",
+        odata: "/odata/"
+    };
+    angular.module("LinqToOdata", []).constant("config", config).factory("ODataProvider", [ "$http", "$q", "config", function($http, $q, config) {
+        var ODataProvider = function() {
+            var self = this;
+            self.cache = void 0;
+            var Types = [], endPoints = [];
+            BoostJS.QueryProvider.call(self), self.execute = self.toArray = function(queryable) {
+                var uri, deferred = $q.defer(), Type = queryable.Type, index = Types.indexOf(Type);
+                if (index >= 0 && (uri = endPoints[index]), !uri) throw new Error("Provider doesn't support querying that Type.");
+                var odataString = BoostJS.OData.toString(queryable), url = uri + "?" + odataString;
+                return void 0 !== self.cache && self.cache.get(url) ? deferred.resolve(self.cache.get(url)) : $http.get(url).success(function(response, status, headers, config) {
+                    var result = [];
+                    return 418 == status || 0 == status ? void deferred.reject(result) : (result.total = parseInt(response["odata.count"]), 
+                    response.value.forEach(function(item) {
+                        var instance = item;
+                        "function" == typeof Type && (instance = new Type(), Object.keys(item).forEach(function(key) {
+                            instance[key] = item[key];
+                        })), result.push(instance);
+                    }), void 0 !== self.cache && self.cache.put(url, result), void deferred.resolve(result));
+                }).error(function(response) {
+                    deferred.reject(response);
+                }), deferred.promise;
+            }, self.addEndPoint = function(path, Type, baseUri) {
+                Types.push(Type), endPoints.push(path + baseUri);
+            }, self.removeEndPoint = function(Type) {
+                var index = Types.indexOf(Type);
+                index >= 0 && (Types.splice(index, 1), endPoints.splice(index, 1));
+            };
+        };
+        return BoostJS.extend(ODataProvider, BoostJS.QueryProvider), {
+            queriable: function(schema, Type, uriPath, cache) {
+                var provider = new ODataProvider();
+                provider.addEndPoint(config.odata, Type, uriPath), provider.cache = cache;
+                var query = new BoostJS.Queryable(Type, void 0, schema);
+                return query.provider = provider, query = query.count(!0);
+            },
+            queriableTest: function(Type, uriPath, cache) {
+                var provider = new ODataProvider();
+                provider.addEndPoint(config.odataTest, Type, uriPath);
+                var query = new BoostJS.Queryable(Type);
+                return query.provider = provider, query = query.count(!0);
+            }
+        };
+    } ]);
+}(window.BoostJS = {}, window.angular);

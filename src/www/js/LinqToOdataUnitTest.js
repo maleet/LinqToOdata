@@ -1,7 +1,9 @@
 describe("Metadata", function () {
     it("Create object graph by metadata.", function () {
-        var bpBuyFrom = BoostJS.Metadata.create(metadata, metadata.BpBuyFrom);
-
+        var bpBuyFrom = BoostJS.Metadata.create(
+            BoostJS.Metadata.createFilteredSchema(metadata, metadata.WarehouseTransaction, metadata.InboundLine, metadata.WorkCenter),
+            metadata.WarehouseTransaction
+        );
         expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
     });
 });

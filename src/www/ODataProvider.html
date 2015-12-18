@@ -1,6 +1,7 @@
 <html>
 <body>
 <script src="js/LinqToOdata.js"></script>
+<script src="js/angular.js"></script>
 <script>
 
     (function () {
@@ -81,6 +82,7 @@
 
         BoostJS.extend(ODataProvider, BoostJS.ExpressionBuilder);
 
+        angular.module('app', []);
 
         var Person = {
             firstName: null,

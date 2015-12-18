@@ -1,28 +1,29 @@
 {
-    "name": "LinqToOdata",
-    "version": "1.3.4",
-    "homepage": "https://github.com/maleet/LinqToOdata",
-    "author": {
-        "name": "Mart Leet",
-        "email": "maleet@gmail.com"
-    },
-    "description": "Linq query parsed to odata url.",
-    "main": [
-        "dist/LinqToOdata.js",
-        "dist/LinqToOdata.min.js"
-    ],
-    "license": "MIT",
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "Gruntfile.js",
-        "package.json"
-    ],
-    "devDependencies": {
-        "jasmine-core": "jasmine#~2.3.4"
-    },
-    "dependencies": {
-        "underscore": "~1.8.3"
-    }
+  "name": "LinqToOdata",
+  "version": "1.3.5",
+  "homepage": "https://github.com/maleet/LinqToOdata",
+  "author": {
+    "name": "Mart Leet",
+    "email": "maleet@gmail.com"
+  },
+  "description": "Linq query parsed to odata url.",
+  "main": [
+    "dist/LinqToOdata.js",
+    "dist/LinqToOdata.min.js"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "devDependencies": {
+    "jasmine-core": "jasmine#~2.3.4"
+  },
+  "dependencies": {
+    "underscore": "~1.8.3",
+    "angular": "angularjs#~1.4.7"
+  }
 }

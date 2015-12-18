@@ -1,6 +1,6 @@
 // https://github.com/jaredjbarnes/Queryable
 // http://thejavascriptninja.blogspot.com/
-(function () {
+(function (BoostJS, angular) {
 
     // First, checks if it isn't implemented yet.
     if (!String.prototype.format) {
@@ -606,20 +606,13 @@
         };
 
         self.any = function (fn) {
-            var property = Expression.property(namespace);
-            var type = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, undefined, structure));
-
-            changePrefix(type);
-
             function changePrefix(type) {
-                type.children && type.children.forEach(function (child) {
-                    if (child.name == 'property')
-                        child.value = 'u/' + child.value;
-                    changePrefix(child);
+                type.children && type.children.forEach(function(child) {
+                    "property" == child.name && (child.value = "u/" + child.value), changePrefix(child);
                 });
             }
-
-            return Expression.any(property, type);
+            var property = Expression.property(namespace), type = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure));
+            return changePrefix(type), Expression.any(property, type);
         };
 
         self.notEqualTo = function (value) {
@@ -1265,15 +1258,13 @@
         };
 
         ODataQueryVisitor.prototype['any'] = function () {
-            var self = this;
-            var property = arguments[0].replace(/\.0/g, '');
-            property = replaceDotWithSlash(property);
-            if (arguments[1] === true) {
-                return '{0}/any()'.format(property);
-            }
-
-            var anyString = '{0}/any(U: {1})'.format(property, arguments[1]);
-            return anyString;
+            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, values = (arguments[1].name || "equal",
+                propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [];
+            Array.isArray(values) || (values = [ values ]), values.forEach(function(value, index) {
+                args.push(self.equal.apply(self, [ anyString, value ]) + ")");
+            });
+            var value;
+            return value = 1 === args.length ? args[0] : self.or.apply(self, args);
         };
 
         ODataQueryVisitor.prototype["and"] = function () {
@@ -1492,6 +1483,16 @@
             return parseMetadataToObject(metadata, key, nodeTree, node);
         }
 
+        function createSchema(){
+            var result = {};
+            var metadata = arguments[0];
+            for (i = 1; i < arguments.length; i++) {
+                var item =  arguments[i];
+                result[getKeyByValue(metadata, item)] = item;
+            }
+            return result;
+        }
+
         function parseMetadataToObject(metadata, key, nodeTree, parent) {
             if (hasSameParent(parent, key)) {
                 return '{circular: ' + key + '}';
@@ -1507,7 +1508,7 @@
             var item = metadata[key];
 
             if (item == undefined) {
-                throw new Error('Object not found in Metadata: ' + key);
+                console.log('Object not found in Metadata: ' + key);
             }
 
             var type = _.extend({}, item);
@@ -1597,7 +1598,8 @@
         }
 
         return {
-            create: create
+            create: create,
+            createFilteredSchema: createSchema
         }
     };
 
@@ -1803,8 +1805,6 @@
         self.execute = self.toArray;
     };
 
-    window.BoostJS = {};
-
     BoostJS.Observable = Observable;
     BoostJS.Future = Future;
     BoostJS.Expression = Expression;
@@ -1816,4 +1816,126 @@
     BoostJS.Metadata = metadata();
     BoostJS.QueryProvider = QueryProvider;
     BoostJS.extend = extend;
-}());
+
+    var config = {
+        endpoint: "/",
+        odata: '/odata/'
+    };
+
+    angular.module('LinqToOdata', [])
+        .constant('config', config)
+        .factory('ODataProvider', ['$http', '$q', 'config', function ($http, $q, config){
+            var ODataProvider = function () {
+                var self = this;
+
+                self.cache = undefined;
+
+                var Types = [];
+                var endPoints = [];
+
+                BoostJS.QueryProvider.call(self);
+
+                self.execute = self.toArray = function (queryable) {
+                    var deferred = $q.defer();
+
+                    var Type = queryable.Type;
+
+                    var index = Types.indexOf(Type);
+                    var uri;
+
+                    if (index >= 0) {
+                        uri = endPoints[index];
+                    }
+
+                    if (!uri) {
+                        throw new Error("Provider doesn't support querying that Type.");
+                    } else {
+                        var odataString = BoostJS.OData.toString(queryable);
+
+                        var url = uri + "?" + odataString;
+
+                        if (self.cache !== undefined && self.cache.get(url)) {
+                            deferred.resolve(self.cache.get(url));
+                        } else {
+                            $http.get(url)
+                                .success(function (response, status, headers, config) {
+                                    var result = [];
+
+                                    if (status == 418 || status == 0) {
+                                        deferred.reject(result);
+                                        return;
+                                    }
+
+                                    result.total = parseInt(response['odata.count']);
+
+                                    response.value.forEach(function (item) {
+                                        var instance = item;
+                                        if (typeof Type === "function") {
+                                            instance = new Type();
+                                            Object.keys(item).forEach(function (key) {
+                                                instance[key] = item[key];
+                                            });
+                                        }
+
+                                        result.push(instance);
+                                    });
+
+                                    if (self.cache !== undefined) {
+                                        self.cache.put(url, result);
+                                    }
+
+                                    deferred.resolve(result);
+                                })
+                                .error(function (response) {
+                                    deferred.reject(response);
+                                });
+                        }
+                    }
+
+
+                    return deferred.promise;
+                };
+
+                self.addEndPoint = function (path, Type, baseUri) {
+                    Types.push(Type);
+                    endPoints.push(path + baseUri);
+                };
+
+                self.removeEndPoint = function (Type) {
+                    var index = Types.indexOf(Type);
+                    if (index >= 0) {
+                        Types.splice(index, 1);
+                        endPoints.splice(index, 1);
+                    }
+                };
+            };
+
+            BoostJS.extend(ODataProvider, BoostJS.QueryProvider);
+
+            return {
+                queriable: function (schema, Type, uriPath, cache) {
+                    var provider = new ODataProvider();
+                    provider.addEndPoint(config.odata, Type, uriPath);
+                    provider.cache = cache;
+
+                    var query = new BoostJS.Queryable(Type, undefined, schema);
+
+                    query.provider = provider;
+                    query = query.count(true);
+
+                    return query;
+                },
+                queriableTest: function (Type, uriPath, cache) {
+                    var provider = new ODataProvider();
+                    provider.addEndPoint(config.odataTest, Type, uriPath);
+
+                    var query = new BoostJS.Queryable(Type);
+                    query.provider = provider;
+                    query = query.count(true);
+
+                    return query;
+                }
+            };
+        }]);
+
+}(window.BoostJS = {}, window.angular));
