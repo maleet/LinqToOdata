@@ -1,9 +1,33 @@
 describe("Metadata", function () {
     it("Create object graph by metadata.", function () {
-        var bpBuyFrom = BoostJS.Metadata.create(
-            BoostJS.Metadata.createFilteredSchema(metadata, metadata.WarehouseTransaction, metadata.InboundLine, metadata.WorkCenter),
-            metadata.WarehouseTransaction
-        );
+        var bpBuyFrom = createFiltered(metadata.WarehouseTransaction, metadata.WarehouseTransaction, metadata.InboundLine, metadata.WorkCenter);
+
+        function createFiltered(item){
+            var key = getKeyByValue(metadata, item);
+            var newArgs = [];
+            newArgs.push(metadata)
+            for (var i = 1; i < arguments.length; i++) {
+                newArgs.push(arguments[i]);
+            }
+
+            var filteredSchema = BoostJS.Metadata.createFilteredSchema.apply(BoostJS.Metadata.createFilteredSchema, newArgs);
+
+            return BoostJS.Metadata.create(filteredSchema,
+                metadata[key]
+            );
+        }
+
+        function getKeyByValue (object, key) {
+            for (var prop in object) {
+                if (object.hasOwnProperty(prop)) {
+                    if (object[prop] === key) {
+                        return prop;
+                    }
+                }
+            }
+            return undefined;
+        }
+
         expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
     });
 });

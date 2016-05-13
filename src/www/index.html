@@ -13,12 +13,40 @@
         <div class="row">
 
             <div class="col-md-12" style="text-align: center;">
-                <h1>LinqToOdata</h1>
+                <h1 id="output">LinqToOdata</h1>
             </div>
 
         </div>
 
     </div>
+
+<script>
+    var string = 'User,User.UserInRole.Role,Role';
+    
+    function replaceDotWithInnerKeys(string) {
+        var wholeArray = string.split(',');
+        wholeArray.forEach(function (e, eIndex, eArray) {
+            var result = '';
+            var array = e.split('.');
+            array.forEach(function (item, index) {
+                if(array.length-1 !== index)
+                    result += item + '($expand=';
+                else{
+                    result += item;
+                    for (var i = 1; i < array.length; i++) {
+                        result += ')';
+                    }
+                }
+            })
+            eArray[eIndex] = result;
+        })
+        return wholeArray.join(',');
+    }
+
+
+    var el = document.getElementById('output');
+    el.innerHTML = replaceDotWithInnerKeys(string);
+</script>
 
 </body>
 </html>

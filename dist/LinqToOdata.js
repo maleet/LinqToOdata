@@ -2,6 +2,18 @@
     function replaceDotWithSlash(str) {
         return str.replace(/\./g, "/");
     }
+    function replaceDotWithInnerKeys(string, key) {
+        var wholeArray = string.split(",");
+        return wholeArray.forEach(function(e, eIndex, eArray) {
+            var result = "", array = e.split(".");
+            array.forEach(function(item, index) {
+                if (array.length - 1 !== index) result += item + "(" + key + "="; else {
+                    result += item;
+                    for (var i = 1; i < array.length; i++) result += ")";
+                }
+            }), eArray[eIndex] = result;
+        }), wholeArray.join(",");
+    }
     String.prototype.format || (String.prototype.format = function() {
         var args = arguments;
         return this.replace(/{(\d+)}/g, function(match, number) {
@@ -675,18 +687,26 @@
             var result = Array.prototype.slice.call(arguments, 0);
             return "&$orderby=" + replaceDotWithSlash(result.join(", "));
         }, ODataQueryVisitor.prototype.count = function(left, right) {
-            return "&$inlinecount=allpages";
+            return "&$count=true";
         }, ODataQueryVisitor.prototype.where = function() {
             var self = this;
             return "&$filter=" + self.and.apply(self.parsers, arguments);
         }, ODataQueryVisitor.prototype.any = function() {
-            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, values = (arguments[1].name || "equal", 
-            propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [];
+            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, valueType = propertyValue[1].name, values = (arguments[1].name || "equal", 
+            propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [], method = arguments[1].name;
             Array.isArray(values) || (values = [ values ]), values.forEach(function(value, index) {
-                args.push(self.equal.apply(self, [ anyString, value ]) + ")");
+                args.push(self[method].apply(self, [ anyString, value ]) + ")");
             });
             var value;
-            return value = 1 === args.length ? args[0] : self.or.apply(self, args);
+            if ("array" == valueType) return value = 1 === args.length ? args[0] : self.or.apply(self, args);
+            var propertyValue = arguments[1].children, methodname = arguments[1].name || "equal", values = propertyValue[1].value, valString = "u/{0}".format(propertyValue[0].value), args = [];
+            Array.isArray(values) || (values = [ values ]), values.forEach(function(value, index) {
+                args.push(self[methodname].apply(self, [ valString, value ]));
+            });
+            var value;
+            value = 1 === args.length ? args[0] : self.or.apply(self, args);
+            var anyString = "{0}/any(u: {1})".format(property, value);
+            return anyString;
         }, ODataQueryVisitor.prototype.and = function() {
             var children = Array.prototype.slice.call(arguments, 0), result = [];
             children.forEach(function(expression, index) {
@@ -718,12 +738,15 @@
         }, ODataQueryVisitor.prototype.substring = function(namespace, startAt, endAt) {
             return "substring(" + namespace + " " + (startAt ? "," + startAt : ",0") + " " + (endAt ? "," + endAt : "") + ")";
         }, ODataQueryVisitor.prototype.substringOf = function(namespace, value) {
-            return "substringof(" + value + "," + replaceDotWithSlash(namespace) + ")";
+            var self = this;
+            return "string" == typeof value && -1 === value.indexOf("'") && (value = self.string.apply(self, [ {
+                value: value
+            } ])), "substringof(" + value + "," + replaceDotWithSlash(namespace) + ")";
         }, ODataQueryVisitor.prototype.startsWith = function(namespace, value) {
             return "startswith(" + namespace + "," + value + ")";
         }, ODataQueryVisitor.prototype.expand = function(namespace, value) {
             var result = Array.prototype.slice.call(arguments, 0);
-            return result = replaceDotWithSlash(result.join(",")), "&$expand=" + result;
+            return result = replaceDotWithInnerKeys(result.join(","), "$expand"), "&$expand=" + result;
         }, ODataQueryVisitor.prototype.select = function(namespace, value) {
             var result = Array.prototype.slice.call(arguments, 0);
             return result = replaceDotWithSlash(result.join(",")), "&$select=" + result;

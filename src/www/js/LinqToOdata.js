@@ -43,6 +43,26 @@
         return str.replace(/\./g, '/');
     }
 
+    function replaceDotWithInnerKeys(string, key) {
+        var wholeArray = string.split(',');
+        wholeArray.forEach(function (e, eIndex, eArray) {
+            var result = '';
+            var array = e.split('.');
+            array.forEach(function (item, index) {
+                if(array.length-1 !== index)
+                    result += item + '(' + key + '=';
+                else{
+                    result += item;
+                    for (var i = 1; i < array.length; i++) {
+                        result += ')';
+                    }
+                }
+            })
+            eArray[eIndex] = result;
+        })
+        return wholeArray.join(',');
+    }
+
     var getObject = function (namespace, scope) {
         scope = typeof scope === "undefined" ? (function () {
             return this;
@@ -1249,7 +1269,7 @@
         };
 
         ODataQueryVisitor.prototype["count"] = function (left, right) {
-            return "&$inlinecount=allpages";
+            return "&$count=true";
         };
 
         ODataQueryVisitor.prototype["where"] = function () {
@@ -1258,13 +1278,44 @@
         };
 
         ODataQueryVisitor.prototype['any'] = function () {
-            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, values = (arguments[1].name || "equal",
+            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, valueType = propertyValue[1].name, values = (arguments[1].name || "equal",
                 propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [];
+            var method = arguments[1].name;
             Array.isArray(values) || (values = [ values ]), values.forEach(function(value, index) {
-                args.push(self.equal.apply(self, [ anyString, value ]) + ")");
+                args.push(self[method].apply(self, [ anyString, value ]) + ")");
             });
             var value;
-            return value = 1 === args.length ? args[0] : self.or.apply(self, args);
+
+            if(valueType == 'array'){
+                return value = 1 === args.length ? args[0] : self.or.apply(self, args);
+            }
+
+            var propertyValue = arguments[1].children;
+            var methodname = arguments[1].name || 'equal';
+            var values = propertyValue[1].value;
+            var valString = 'u/{0}'.format(propertyValue[0].value);
+
+
+            var args = [];
+            if(!Array.isArray(values))
+            {
+                values = [values];
+            }
+            values.forEach(function(value, index) {
+                args.push(self[methodname].apply(self, [valString, value]));
+            });
+
+            var value;
+            if(args.length === 1) {
+                value = args[0];
+
+            } else {
+                value = self['or'].apply(self, args);
+            }
+
+            var anyString = '{0}/any(u: {1})'.format(property, value);
+
+            return anyString;
         };
 
         ODataQueryVisitor.prototype["and"] = function () {
@@ -1349,6 +1400,10 @@
         };
 
         ODataQueryVisitor.prototype["substringOf"] = function (namespace, value) {
+            var self = this;
+            if (typeof value === 'string' && value.indexOf('\'') === -1) {
+                value = self['string'].apply(self, [{value: value}]);
+            }
             return "substringof(" + value + "," + replaceDotWithSlash(namespace) + ")";
         };
 
@@ -1358,8 +1413,7 @@
 
         ODataQueryVisitor.prototype["expand"] = function (namespace, value) {
             var result = Array.prototype.slice.call(arguments, 0);
-
-            result = replaceDotWithSlash(result.join(","));
+            result = replaceDotWithInnerKeys(result.join(","), '$expand');
             return "&$expand=" + result;
         };
 
