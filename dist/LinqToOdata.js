@@ -28,8 +28,8 @@
     }, emptyFn = function() {}, assertInstance = function(Type, instance) {
         if (!(instance instanceof Type)) throw new Error("Constructor run in the context of the window.");
     }, isValidGuid = function(value) {
-        var validGuid = /^(\{|\(|\')?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}(\}|\)|\')?$/, emptyGuid = /^(\{|\(|\')?0{8}-(0{4}-){3}0{12}(\}|\)|\')?$/;
-        return validGuid.test(value) && !emptyGuid.test(value);
+        var validGuid = /^(\{|\(|\')?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}(\}|\)|\')?$/;
+        return validGuid.test(value);
     }, Observable = function() {
         var self = this;
         assertInstance(Observable, self);
@@ -338,14 +338,9 @@
         self.equals = function(value) {
             var property = Expression.property(namespace), constant = Expression.getExpressionType(value);
             return Expression.equal(property, constant);
-        }, self.any = function(fn) {
-            function changePrefix(type) {
-                type.children && type.children.forEach(function(child) {
-                    "property" == child.name && (child.value = "u/" + child.value), changePrefix(child);
-                });
-            }
-            var property = Expression.property(namespace), type = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure));
-            return changePrefix(type), Expression.any(property, type);
+        }, self.any = function(value) {
+            var property = Expression.property(namespace), constant = Expression.getExpressionType(value), type = new ExpressionBuilder(Type, void 0, structure);
+            return Expression.any(property, constant, type);
         }, self.notEqualTo = function(value) {
             var property = Expression.property(namespace), constant = Expression.getExpressionType(value);
             return Expression.notEqual(property, constant);
@@ -734,7 +729,7 @@
         }, ODataQueryVisitor.prototype.property = function(expression) {
             return this.toServiceNamespace(expression.value);
         }, ODataQueryVisitor.prototype.guid = function(name, value) {
-            return value.match(/^(\')+[0-9a-fA-F-]+(\')+$/) ? "guid" + value : "guid'" + value.replace("'", "''") + "'";
+            return value.match(/^(\')+[0-9a-fA-F-]+(\')+$/) ? value.replace(/'/g, "") : value;
         }, ODataQueryVisitor.prototype.substring = function(namespace, startAt, endAt) {
             return "substring(" + namespace + " " + (startAt ? "," + startAt : ",0") + " " + (endAt ? "," + endAt : "") + ")";
         }, ODataQueryVisitor.prototype.substringOf = function(namespace, value) {
@@ -1011,7 +1006,7 @@
                 var odataString = BoostJS.OData.toString(queryable), url = uri + "?" + odataString;
                 return void 0 !== self.cache && self.cache.get(url) ? deferred.resolve(self.cache.get(url)) : $http.get(url).success(function(response, status, headers, config) {
                     var result = [];
-                    return 418 == status || 0 == status ? void deferred.reject(result) : (result.total = parseInt(response["odata.count"]), 
+                    return 418 == status || 0 == status ? void deferred.reject(result) : (result.total = parseInt(response["@odata.count"]), 
                     response.value.forEach(function(item) {
                         var instance = item;
                         "function" == typeof Type && (instance = new Type(), Object.keys(item).forEach(function(key) {

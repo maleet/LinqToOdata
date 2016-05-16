@@ -36,7 +36,7 @@
     var isValidGuid = function (value) {
         var validGuid = /^(\{|\(|\')?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}(\}|\)|\')?$/;
         var emptyGuid = /^(\{|\(|\')?0{8}-(0{4}-){3}0{12}(\}|\)|\')?$/;
-        return validGuid.test(value) && !emptyGuid.test(value);
+        return validGuid.test(value); // && !emptyGuid.test(value);
     };
 
     function replaceDotWithSlash(str) {
@@ -625,14 +625,9 @@
             return Expression.equal(property, constant);
         };
 
-        self.any = function (fn) {
-            function changePrefix(type) {
-                type.children && type.children.forEach(function(child) {
-                    "property" == child.name && (child.value = "u/" + child.value), changePrefix(child);
-                });
-            }
-            var property = Expression.property(namespace), type = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, structure));
-            return changePrefix(type), Expression.any(property, type);
+        self.any = function(value) {
+            var property = Expression.property(namespace), constant = Expression.getExpressionType(value), type = new ExpressionBuilder(Type, void 0, structure);
+            return Expression.any(property, constant, type)
         };
 
         self.notEqualTo = function (value) {
@@ -695,7 +690,7 @@
         for (var property in mapping) {
             (function (property) {
                 Object.defineProperty(self, property, {
-                    get: function () {
+                    get: function() {
                         var ChildType;
                         if (mapping[property] === null || typeof mapping[property] === "undefined") {
                             ChildType = Object;
@@ -1277,7 +1272,7 @@
             return "&$filter=" + self["and"].apply(self.parsers, arguments);
         };
 
-        ODataQueryVisitor.prototype['any'] = function () {
+        ODataQueryVisitor.prototype.any = function() {
             var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, valueType = propertyValue[1].name, values = (arguments[1].name || "equal",
                 propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [];
             var method = arguments[1].name;
@@ -1389,10 +1384,7 @@
         };
 
         ODataQueryVisitor.prototype["guid"] = function (name, value) {
-            if (value.match(/^(\')+[0-9a-fA-F-]+(\')+$/)) {
-                return "guid" + value;
-            }
-            return "guid'" + value.replace("'", "''") + "'";
+            return value.match(/^(\')+[0-9a-fA-F-]+(\')+$/) ? value.replace(/'/g, "") : value;
         };
 
         ODataQueryVisitor.prototype["substring"] = function (namespace, startAt, endAt) {
@@ -1405,7 +1397,7 @@
                 value = self['string'].apply(self, [{value: value}]);
             }
             return "substringof(" + value + "," + replaceDotWithSlash(namespace) + ")";
-        };
+        }; 
 
         ODataQueryVisitor.prototype["startsWith"] = function (namespace, value) {
             return "startswith(" + namespace + "," + value + ")";
@@ -1920,7 +1912,7 @@
                                         return;
                                     }
 
-                                    result.total = parseInt(response['odata.count']);
+                                    result.total = parseInt(response['@odata.count']);
 
                                     response.value.forEach(function (item) {
                                         var instance = item;
