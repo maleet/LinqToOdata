@@ -1396,7 +1396,7 @@
             if (typeof value === 'string' && value.indexOf('\'') === -1) {
                 value = self['string'].apply(self, [{value: value}]);
             }
-            return "substringof(" + value + "," + replaceDotWithSlash(namespace) + ")";
+            return "contains(" + replaceDotWithSlash(namespace) + "," + value + ")"; 
         }; 
 
         ODataQueryVisitor.prototype["startsWith"] = function (namespace, value) {
@@ -1429,7 +1429,7 @@
         };
 
         ODataQueryVisitor.prototype["date"] = function (expression) {
-            return "DateTime" + JSON.stringify(expression.value).replace(/"/g, "'") + "";
+            return JSON.stringify(expression.value).replace(/"/g, "");
         };
 
         ODataQueryVisitor.prototype["string"] = function (expression) {

@@ -736,7 +736,7 @@
             var self = this;
             return "string" == typeof value && -1 === value.indexOf("'") && (value = self.string.apply(self, [ {
                 value: value
-            } ])), "substringof(" + value + "," + replaceDotWithSlash(namespace) + ")";
+            } ])), "contains(" + replaceDotWithSlash(namespace) + "," + value + ")";
         }, ODataQueryVisitor.prototype.startsWith = function(namespace, value) {
             return "startswith(" + namespace + "," + value + ")";
         }, ODataQueryVisitor.prototype.expand = function(namespace, value) {
@@ -752,7 +752,7 @@
         }, ODataQueryVisitor.prototype.undefined = function(value) {
             return "undefined";
         }, ODataQueryVisitor.prototype.date = function(expression) {
-            return "DateTime" + JSON.stringify(expression.value).replace(/"/g, "'");
+            return JSON.stringify(expression.value).replace(/"/g, "");
         }, ODataQueryVisitor.prototype.string = function(expression) {
             return "'" + (expression.value || "").replace("'", "''") + "'";
         }, ODataQueryVisitor.prototype.number = function(expression) {

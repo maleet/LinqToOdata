@@ -1,45 +1,45 @@
-describe("Metadata", function () {
-    it("Create object graph by metadata.", function () {
-        var bpBuyFrom = createFiltered(metadata.WarehouseTransaction, metadata.WarehouseTransaction, metadata.InboundLine, metadata.WorkCenter);
+//describe("Metadata", function () {
+//    it("Create object graph by metadata.", function () {
+//        var bpBuyFrom = createFiltered(metadata.WarehouseTransaction, metadata.WarehouseTransaction, metadata.InboundLine, metadata.WorkCenter);
+//
+//        function createFiltered(item){
+//            var key = getKeyByValue(metadata, item);
+//            var newArgs = [];
+//            newArgs.push(metadata)
+//            for (var i = 1; i < arguments.length; i++) {
+//                newArgs.push(arguments[i]);
+//            }
+//
+//            var filteredSchema = BoostJS.Metadata.createFilteredSchema.apply(BoostJS.Metadata.createFilteredSchema, newArgs);
+//
+//            return BoostJS.Metadata.create(filteredSchema,
+//                metadata[key]
+//            );
+//        }
+//
+//        function getKeyByValue (object, key) {
+//            for (var prop in object) {
+//                if (object.hasOwnProperty(prop)) {
+//                    if (object[prop] === key) {
+//                        return prop;
+//                    }
+//                }
+//            }
+//            return undefined;
+//        }
+//
+//        expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
+//    });
+//});
 
-        function createFiltered(item){
-            var key = getKeyByValue(metadata, item);
-            var newArgs = [];
-            newArgs.push(metadata)
-            for (var i = 1; i < arguments.length; i++) {
-                newArgs.push(arguments[i]);
-            }
-
-            var filteredSchema = BoostJS.Metadata.createFilteredSchema.apply(BoostJS.Metadata.createFilteredSchema, newArgs);
-
-            return BoostJS.Metadata.create(filteredSchema,
-                metadata[key]
-            );
-        }
-
-        function getKeyByValue (object, key) {
-            for (var prop in object) {
-                if (object.hasOwnProperty(prop)) {
-                    if (object[prop] === key) {
-                        return prop;
-                    }
-                }
-            }
-            return undefined;
-        }
-
-        expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
-    });
-});
-
-describe("Metadata", function () {
-    it("Create all object graphs by metadata.", function () {
-        Object.keys(metadata).forEach(function (key) {
-            var bpBuyFrom = BoostJS.Metadata.create(metadata, metadata[key]);
-            expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
-        })
-    });
-});
+//describe("Metadata", function () {
+//    it("Create all object graphs by metadata.", function () {
+//        Object.keys(metadata).forEach(function (key) {
+//            var bpBuyFrom = BoostJS.Metadata.create(metadata, metadata[key]);
+//            expect(JSON.stringify(bpBuyFrom, null, "\t")).toEqual("jsonString");
+//        })
+//    });
+//});
 
 describe("Odata", function () {
     it("Convert a queryable to a odata string.", function () {
@@ -47,7 +47,10 @@ describe("Odata", function () {
 
         var queryable = new BoostJS.Queryable(metadata.BpBuyFrom, undefined, metadata)
             .where(function (bpBuyFrom) {
-                return this.and(undefined, bpBuyFrom.BusinessPartner.BpBuyFrom.BusinessPartner.BpBuyFrom.Code.equals('02677'));
+                var ex = this.and(undefined, bpBuyFrom.BusinessPartner.BpBuyFrom.BusinessPartner.BpBuyFrom.Code.equals('02677'));
+
+                var date = new Date(0)
+                return this.and(ex, bpBuyFrom.ValidFrom.lessThan(date));
             })
             .expand(function (bpBuyFrom) {
                 return [
@@ -63,7 +66,7 @@ describe("Odata", function () {
         var odataString = BoostJS.OData.toString(queryable);
         console.log(odataString);
 
-        expect(odataString).toEqual("&$filter=(((BusinessPartner/BpBuyFrom/BusinessPartner/BpBuyFrom/Code eq '02677')))&$expand=AddressRelations/Address,BusinessPartner,BusinessPartner/BpInvoiceFrom,BusinessPartner/Contact,BusinessPartner/Contact/AddressRelations/Address,BusinessPartner/AddressRelations/Address");
+        expect(odataString).toEqual("&$filter=((((BusinessPartner/BpBuyFrom/BusinessPartner/BpBuyFrom/Code eq '02677')) and (ValidFrom lt 1970-01-01T00:00:00.000Z)))&$expand=AddressRelations($expand=Address),BusinessPartner,BusinessPartner($expand=BpInvoiceFrom),BusinessPartner($expand=Contact),BusinessPartner($expand=Contact($expand=AddressRelations($expand=Address))),BusinessPartner($expand=AddressRelations($expand=Address))");
 
     });
 });
@@ -108,8 +111,10 @@ describe("Odata", function () {
 
         var odataString = BoostJS.OData.toString(queryable);
 
+        ""
+
         expect(odataString)
-            .toEqual("&$filter=((((((Id eq guid'9b2a197b-189f-4097-9470-458da2854bd3') or (Id eq guid'8b2a197b-189f-4097-9470-458da2854bd3'))) and (CarrierBpBuyFroms/any(u: u/BpBuyFromId eq guid'7b2a197b-189f-4097-9470-458da2854bd3'))) and substringof('Name',Name)))");
+            .toEqual("&$filter=((((((Id eq 9b2a197b-189f-4097-9470-458da2854bd3) or (Id eq 8b2a197b-189f-4097-9470-458da2854bd3))) and CarrierBpBuyFroms/any(u: (u/BpBuyFromId eq 7b2a197b-189f-4097-9470-458da2854bd3))) and contains(Name,'Name')))");
 
         function assignFilter(filter, query) {
             if (!!filter) {
