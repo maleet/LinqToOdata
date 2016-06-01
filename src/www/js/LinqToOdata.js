@@ -630,6 +630,11 @@
             return Expression.any(property, constant, type)
         };
 
+        self.select = function(value) {
+            var property = Expression.property(namespace), constant = Expression.getExpressionType(value), type = new ExpressionBuilder(Type, void 0, structure);
+            return Expression.select(property, constant, type)
+        };
+
         self.notEqualTo = function (value) {
             var property = Expression.property(namespace);
             var constant = Expression.getExpressionType(value);
@@ -1034,8 +1039,14 @@
             });
             var property = fn.call(self, new ExpressionBuilder(Type, undefined, Schema));
             if (property) {
-                var property2 = Expression.property(property.toString());
-                expand.children.push(property2);
+                property.forEach(function (p) {
+                    if(p instanceof Expression){
+                        expand.children.push(Expression.and(p));
+                    }else{
+                        var property2 = Expression.property(p.toString());
+                        expand.children.push(property2);
+                    }
+                })
             }
 
             expression.expand = expand;
@@ -1405,7 +1416,29 @@
 
         ODataQueryVisitor.prototype["expand"] = function (namespace, value) {
             var result = Array.prototype.slice.call(arguments, 0);
-            result = replaceDotWithInnerKeys(result.join(","), '$expand');
+            var odata4expand = [];
+            result.forEach(function (r) {
+                var s = r;
+                if(s.startsWith('(&$select=')){
+                    var expanded = s.substring(s.indexOf('=')+1);
+                    var property = expanded.substring(0, expanded.indexOf(','));
+                    var rest = expanded.substring(expanded.indexOf(',')+1);
+
+                    var countOfSlash = (property.match(/\//g) || []).length;
+
+                    property = property.replace(new RegExp(/\//, 'g'), '($expand=');
+
+                    s = property + "(&$select=" +rest;
+
+                    for (var i = 0; i < countOfSlash; i++) {
+                        s+= ')';
+                    }
+                }
+
+                odata4expand.push(s);
+            })
+
+            result = replaceDotWithInnerKeys(odata4expand.join(","), '$expand');
             return "&$expand=" + result;
         };
 
