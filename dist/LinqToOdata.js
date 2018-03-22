@@ -35,8 +35,8 @@
         assertInstance(Observable, self);
         var _listeners = {};
         self.observe = function(eventName, callback) {
-            return _listeners[eventName] || (_listeners[eventName] = []), _listeners[eventName].push(callback), 
-            self;
+            return _listeners[eventName] || (_listeners[eventName] = []), _listeners[eventName].push(callback),
+                self;
         }, self.unobserve = function(eventName, callback) {
             var listeners = _listeners[eventName] || [], index = listeners.indexOf(callback);
             return index >= 0 && listeners.splice(index, 1), self;
@@ -52,17 +52,17 @@
         var observers = new Observable(), defaultState = {
             get: function() {
                 _state = retrievingState, getValue(function(value) {
-                    _state === retrievingState && (self.isComplete = !0, self.value = value, _state = completeState, 
-                    observers.notify({
-                        type: "then",
-                        value: value
-                    }));
+                    _state === retrievingState && (self.isComplete = !0, self.value = value, _state = completeState,
+                        observers.notify({
+                            type: "then",
+                            value: value
+                        }));
                 }, function(error) {
-                    _state === retrievingState && (self.isComplete = !0, self.error = error, _state = errorState, 
-                    observers.notify({
-                        type: "ifError",
-                        error: error
-                    }));
+                    _state === retrievingState && (self.isComplete = !0, self.error = error, _state = errorState,
+                        observers.notify({
+                            type: "ifError",
+                            error: error
+                        }));
                 });
             },
             then: function(callback) {
@@ -313,10 +313,10 @@
     }();
     var ValueExpression = function(name, value) {
         var self = this;
-        assertInstance(ValueExpression, self), Expression.call(self, name), self.value = value || null, 
-        self.copy = function() {
-            return new ValueExpression(name, value);
-        };
+        assertInstance(ValueExpression, self), Expression.call(self, name), self.value = value || null,
+            self.copy = function() {
+                return new ValueExpression(name, value);
+            };
     };
     extend(ValueExpression, Expression);
     var ComplexExpression = function(name) {
@@ -376,8 +376,8 @@
             Object.defineProperty(self, property, {
                 get: function() {
                     var ChildType;
-                    if (null === mapping[property] || "undefined" == typeof mapping[property]) ChildType = Object; else if ("function" == typeof Type) ChildType = mapping[property].constructor; else if (ChildType = mapping[property], 
-                    -1 !== ChildType.Type.indexOf("[]")) {
+                    if (null === mapping[property] || "undefined" == typeof mapping[property]) ChildType = Object; else if ("function" == typeof Type) ChildType = mapping[property].constructor; else if (ChildType = mapping[property],
+                        -1 !== ChildType.Type.indexOf("[]")) {
                         var arrayTypeString = ChildType.Type.replace("[]", "");
                         ChildType = structure[arrayTypeString];
                     } else void 0 !== structure[ChildType.Type] && (ChildType = structure[ChildType.Type]);
@@ -454,8 +454,8 @@
             return _whereExpression = Expression.where(expression), self;
         }, self.or = function(fn) {
             var rightExpression;
-            fn instanceof Expression ? rightExpression = Expression.or.apply(Expression, arguments) : (fn = fn || function() {}, 
-            rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema)));
+            fn instanceof Expression ? rightExpression = Expression.or.apply(Expression, arguments) : (fn = fn || function() {},
+                rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema)));
             var whereExpression, copy = createCopy(expression);
             if (_whereExpression) {
                 var expressions = _whereExpression.copy();
@@ -463,8 +463,8 @@
             } else whereExpression = Expression.where(rightExpression);
             return copy.expression.where = whereExpression, self;
         }, self.and = function(fn) {
-            fn instanceof Expression ? rightExpression = Expression.and.apply(Expression, arguments) : (fn = fn || function() {}, 
-            rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema)));
+            fn instanceof Expression ? rightExpression = Expression.and.apply(Expression, arguments) : (fn = fn || function() {},
+                rightExpression = fn.call(ExpressionBuilder, new ExpressionBuilder(Type, void 0, Schema)));
             var whereExpression, copy = createCopy(expression);
             if (_whereExpression) {
                 var expressions = _whereExpression.copy();
@@ -507,8 +507,8 @@
                 orderBy.children.push(expression.copy());
             });
             var result = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
-            result && orderBy.children.push(Expression.descending(Expression.property(result.toString()))), 
-            expression.orderBy = orderBy;
+            result && orderBy.children.push(Expression.descending(Expression.property(result.toString()))),
+                expression.orderBy = orderBy;
             var copy = createCopy(expression);
             return copy;
         }, self.order = function(obj) {
@@ -543,8 +543,8 @@
                 orderBy.children.push(expression.copy());
             });
             var result = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
-            result && orderBy.children.push(Expression.ascending(Expression.property(result.toString()))), 
-            expression.orderBy = orderBy;
+            result && orderBy.children.push(Expression.ascending(Expression.property(result.toString()))),
+                expression.orderBy = orderBy;
             var copy = createCopy(expression);
             return copy;
         };
@@ -563,12 +563,12 @@
                 expand.children.push(expression.copy());
             });
             var property = fn.call(self, new ExpressionBuilder(Type, void 0, Schema));
-            property && property.forEach(function(p) {
+            property && (Array.isArray(property) || (property = [ property ]), property.forEach(function(p) {
                 if (p instanceof Expression) expand.children.push(Expression.and(p)); else {
                     var property2 = Expression.property(p.toString());
                     expand.children.push(property2);
                 }
-            }), expression.expand = expand;
+            })), expression.expand = expand;
             var copy = createCopy(expression);
             return copy;
         }, self.toGuid = function(value) {
@@ -628,8 +628,8 @@
             return _provider.contains(self, item);
         };
         self.intersects = function(compareToQueryable) {
-            return compareToQueryable instanceof Array && (compareToQueryable = compareToQueryable.asQueryable()), 
-            _provider.intersects(self, compareToQueryable);
+            return compareToQueryable instanceof Array && (compareToQueryable = compareToQueryable.asQueryable()),
+                _provider.intersects(self, compareToQueryable);
         }, self.ofType = function(Type) {
             var queryable = new Queryable(Type);
             return queryable.provider = _provider, queryable;
@@ -650,23 +650,23 @@
         }, self;
     }, ExpressionParser = function(queryVisitor) {
         var self = this;
-        return assertInstance(ExpressionParser, self), self.queryVisitor = queryVisitor || {}, 
-        self.parse = function(expression) {
-            if (!expression) return null;
-            var children = [];
-            expression.children.forEach(function(expression) {
-                expression.children ? children.push(self.parse(expression)) : children.push(expression);
-            });
-            var func = self.queryVisitor[expression.name];
-            if (!func) throw new Error("The visitor doesn't support the \"" + expression.name + '" expression.');
-            return children.forEach(function(child, index) {
-                if (child instanceof Expression) {
-                    var func = self.queryVisitor[child.name];
-                    if (!func) throw new Error("The visitor doesn't support the \"" + child.name + '" expression.');
-                    children[index] = func.call(self.queryVisitor, child, children);
-                }
-            }), func.apply(self.queryVisitor, children);
-        }, self;
+        return assertInstance(ExpressionParser, self), self.queryVisitor = queryVisitor || {},
+            self.parse = function(expression) {
+                if (!expression) return null;
+                var children = [];
+                expression.children.forEach(function(expression) {
+                    expression.children ? children.push(self.parse(expression)) : children.push(expression);
+                });
+                var func = self.queryVisitor[expression.name];
+                if (!func) throw new Error("The visitor doesn't support the \"" + expression.name + '" expression.');
+                return children.forEach(function(child, index) {
+                    if (child instanceof Expression) {
+                        var func = self.queryVisitor[child.name];
+                        if (!func) throw new Error("The visitor doesn't support the \"" + child.name + '" expression.');
+                        children[index] = func.call(self.queryVisitor, child, children);
+                    }
+                }), func.apply(self.queryVisitor, children);
+            }, self;
     }, ODataQueryVisitor = function() {
         var self = this;
         return assertInstance(ODataQueryVisitor, self), self.toServiceNamespace = function(value) {
@@ -691,8 +691,8 @@
             var self = this;
             return "&$filter=" + self.and.apply(self.parsers, arguments);
         }, ODataQueryVisitor.prototype.any = function() {
-            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, valueType = propertyValue[1].name, values = (arguments[1].name || "equal", 
-            propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [], method = arguments[1].name;
+            var self = this, property = arguments[0].replace(".0", ""), propertyValue = arguments[1].children, valueType = propertyValue[1].name, values = (arguments[1].name || "equal",
+                propertyValue[1].value), anyString = "{0}/any(u: u/{1}".format(property, propertyValue[0].value), args = [], method = arguments[1].name;
             Array.isArray(values) || (values = [ values ]), values.forEach(function(value, index) {
                 args.push(self[method].apply(self, [ anyString, value ]) + ")");
             });
@@ -722,11 +722,11 @@
             return "" === joined ? "" : "(" + joined + ")";
         }, ODataQueryVisitor.prototype.equal = function(left, right) {
             var self = this;
-            return "" === right || -1 != right.indexOf(" eq ") ? right : (isValidGuid(right) && (right = self.guid.apply(self.parsers, arguments)), 
+            return "" === right || -1 != right.indexOf(" eq ") ? right : (isValidGuid(right) && (right = self.guid.apply(self.parsers, arguments)),
             "(" + replaceDotWithSlash(left) + " eq " + right + ")");
         }, ODataQueryVisitor.prototype.notEqual = function(left, right) {
             var self = this;
-            return isValidGuid(right) && (right = self.guid.apply(self.parsers, arguments)), 
+            return isValidGuid(right) && (right = self.guid.apply(self.parsers, arguments)),
             "(" + replaceDotWithSlash(left) + " ne " + right + ")";
         }, ODataQueryVisitor.prototype.constant = function(expression) {
             return expression.value;
@@ -774,8 +774,8 @@
         }, ODataQueryVisitor.prototype.array = function(array, expression) {
             var self = this, prop = expression[0], values = array.value, args = [];
             if (values.forEach(function(value, index) {
-                args.push(self.equal.apply(self, [ prop, value ]));
-            }), 1 == args.length) return args[0];
+                    args.push(self.equal.apply(self, [ prop, value ]));
+                }), 1 == args.length) return args[0];
             var ands = self.or.apply(self, args);
             return ands;
         }, ODataQueryVisitor.prototype.greaterThan = function(left, right) {
@@ -840,61 +840,61 @@
         function getValueBasedOnType(metadata, type, field, nodes, node) {
             var fieldType = type[field].Type;
             switch (fieldType) {
-              case "DateTime?":
-                return null;
+                case "DateTime?":
+                    return null;
 
-              case "DateTime":
-                return new Date();
+                case "DateTime":
+                    return new Date();
 
-              case "Guid?":
-                return null;
+                case "Guid?":
+                    return null;
 
-              case "Guid":
-                return null;
+                case "Guid":
+                    return null;
 
-              case "String":
-                return null;
+                case "String":
+                    return null;
 
-              case "Boolean":
-                return !1;
+                case "Boolean":
+                    return !1;
 
-              case "Boolean?":
-                return null;
+                case "Boolean?":
+                    return null;
 
-              case "Decimal?":
-                return null;
+                case "Decimal?":
+                    return null;
 
-              case "Decimal":
-                return 0;
+                case "Decimal":
+                    return 0;
 
-              case "Int32?":
-                return null;
+                case "Int32?":
+                    return null;
 
-              case "Int32":
-                return 0;
+                case "Int32":
+                    return 0;
 
-              case "Int64?":
-                return null;
+                case "Int64?":
+                    return null;
 
-              case "Int64":
-                return 0;
+                case "Int64":
+                    return 0;
 
-              case "DateTimeOffset?":
-                return null;
+                case "DateTimeOffset?":
+                    return null;
 
-              case "DateTimeOffset":
-                return new Date();
+                case "DateTimeOffset":
+                    return new Date();
 
-              case "Object":
-                return null;
+                case "Object":
+                    return null;
 
-              case "T":
-                return null;
+                case "T":
+                    return null;
 
-              default:
-                if (-1 !== fieldType.indexOf("[]")) return [];
-                var matches = fieldType.match(/<(.*)>/);
-                return matches && matches.length > 0 ? parseMetadataToObject(metadata, matches[1], nodes, node) : parseMetadataToObject(metadata, type[field].Type, nodes, node);
+                default:
+                    if (-1 !== fieldType.indexOf("[]")) return [];
+                    var matches = fieldType.match(/<(.*)>/);
+                    return matches && matches.length > 0 ? parseMetadataToObject(metadata, matches[1], nodes, node) : parseMetadataToObject(metadata, type[field].Type, nodes, node);
             }
             return null;
         }
@@ -918,32 +918,32 @@
             return new Future(function(setValue, setError) {
                 self.toArray(queryable).then(function(array) {
                     var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
-                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
-                    setValue(results.length > 0 ? !0 : !1);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array,
+                        setValue(results.length > 0 ? !0 : !1);
                 });
             });
         }, self.all = function(queryable, func) {
             return new Future(function(setValue, setError) {
                 self.toArray(queryable).then(function(array) {
                     var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
-                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
-                    setValue(results.length === array.length);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array,
+                        setValue(results.length === array.length);
                 });
             });
         }, self.firstOrDefault = function(queryable, func) {
             return new Future(function(setValue, setError) {
                 self.toArray(queryable).then(function(array) {
                     var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
-                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
-                    setValue(results[0] || null);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array,
+                        setValue(results[0] || null);
                 });
             });
         }, self.lastOrDefault = function(queryable, func) {
             return new Future(function(setValue, setError) {
                 self.toArray(queryable).then(function(array) {
                     var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
-                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
-                    setValue(results[results.length - 1] || null);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array,
+                        setValue(results[results.length - 1] || null);
                 });
             });
         }, self.first = function(queryable, func) {
@@ -968,8 +968,8 @@
             return new Future(function(setValue, setError) {
                 self.toArray(queryable).then(function(array) {
                     var results, visitor = new ArrayQueryVisitor(array), parser = new ExpressionParser(visitor);
-                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array, 
-                    setValue(results > 0);
+                    results = "function" == typeof func ? parser.parse(func.call(queryable, new ExpressionBuilder(queryable.Type))) : array,
+                        setValue(results > 0);
                 });
             });
         }, self.select = function(queryable, forEachFunc) {
@@ -999,10 +999,10 @@
             });
         }, self.execute = self.toArray;
     };
-    BoostJS.Observable = Observable, BoostJS.Future = Future, BoostJS.Expression = Expression, 
-    BoostJS.ExpressionBuilder = ExpressionBuilder, BoostJS.Queryable = Queryable, BoostJS.ExpressionParser = ExpressionParser, 
-    BoostJS.ODataQueryVisitor = ODataQueryVisitor, BoostJS.OData = OData, BoostJS.Metadata = metadata(), 
-    BoostJS.QueryProvider = QueryProvider, BoostJS.extend = extend;
+    BoostJS.Observable = Observable, BoostJS.Future = Future, BoostJS.Expression = Expression,
+        BoostJS.ExpressionBuilder = ExpressionBuilder, BoostJS.Queryable = Queryable, BoostJS.ExpressionParser = ExpressionParser,
+        BoostJS.ODataQueryVisitor = ODataQueryVisitor, BoostJS.OData = OData, BoostJS.Metadata = metadata(),
+        BoostJS.QueryProvider = QueryProvider, BoostJS.extend = extend;
     var config = {
         endpoint: "/",
         odata: "/odata/"
@@ -1018,13 +1018,13 @@
                 var odataString = BoostJS.OData.toString(queryable), url = uri + "?" + odataString;
                 return void 0 !== self.cache && self.cache.get(url) ? deferred.resolve(self.cache.get(url)) : $http.get(url).success(function(response, status, headers, config) {
                     var result = [];
-                    return 418 == status || 0 == status ? void deferred.reject(result) : (result.total = parseInt(response["@odata.count"]), 
-                    response.value.forEach(function(item) {
-                        var instance = item;
-                        "function" == typeof Type && (instance = new Type(), Object.keys(item).forEach(function(key) {
-                            instance[key] = item[key];
-                        })), result.push(instance);
-                    }), void 0 !== self.cache && self.cache.put(url, result), void deferred.resolve(result));
+                    return 418 == status || 0 == status ? void deferred.reject(result) : (result.total = parseInt(response["@odata.count"]),
+                        response.value.forEach(function(item) {
+                            var instance = item;
+                            "function" == typeof Type && (instance = new Type(), Object.keys(item).forEach(function(key) {
+                                instance[key] = item[key];
+                            })), result.push(instance);
+                        }), void 0 !== self.cache && self.cache.put(url, result), void deferred.resolve(result));
                 }).error(function(response) {
                     deferred.reject(response);
                 }), deferred.promise;
